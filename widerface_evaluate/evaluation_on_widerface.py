@@ -18,27 +18,29 @@ define_img_size(input_img_size)  # must put define_img_size() before 'import cre
 from vision.ssd.mb_tiny_fd import create_mb_tiny_fd, create_mb_tiny_fd_predictor
 from vision.ssd.mb_tiny_RFB_fd import create_Mb_Tiny_RFB_fd, create_Mb_Tiny_RFB_fd_predictor
 
-label_path = "./models/voc-model-labels.txt"
+label_path = "../models/voc-model-labels.txt"
 
-# net_type = "mb_tiny_fd"          # inference faster,lower precision
-net_type = "mb_tiny_RFB_fd"  # inference lower,higher precision
+# net_type = "slim"          # inference faster,lower precision
+net_type = "RFB"  # inference lower,higher precision
 
 class_names = [name.strip() for name in open(label_path).readlines()]
 num_classes = len(class_names)
-# test_device = "cuda:0"
-test_device = "cpu"
-candidate_size = 500
-threshold = 0.11
+test_device = "cuda:0"
+# test_device = "cpu"
+candidate_size = 800
+threshold = 0.1
 
-val_image_root = "/Users/mui/Desktop/coding/WIDER_val/images/"  # path to widerface valuation image root
+val_image_root = "/pic/linzai/1080Ti/home_linzai/PycharmProjects/insightface/RetinaFace/data/retinaface/val"  # path to widerface valuation image root
 val_result_txt_save_root = "./widerface_evaluation/"  # result directory
 
-if net_type == 'mb_tiny_fd':
-    model_path = "models/pretrained/Mb_Tiny_FD_train_input_320.pth"
+if net_type == 'slim':
+    model_path = "../models/pretrained/version-slim-320.pth"
+    # model_path = "../models/pretrained/version-slim-640.pth"
     net = create_mb_tiny_fd(len(class_names), is_test=True, device=test_device)
     predictor = create_mb_tiny_fd_predictor(net, candidate_size=candidate_size, device=test_device)
-elif net_type == 'mb_tiny_RFB_fd':
-    model_path = "models/pretrained/Mb_Tiny_RFB_FD_train_input_320.pth"
+elif net_type == 'RFB':
+    model_path = "../models/pretrained/version-RFB-320.pth"
+    # model_path = "../models/pretrained/version-RFB-640.pth"
     net = create_Mb_Tiny_RFB_fd(len(class_names), is_test=True, device=test_device)
     predictor = create_Mb_Tiny_RFB_fd_predictor(net, candidate_size=candidate_size, device=test_device)
 else:

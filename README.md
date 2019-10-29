@@ -27,8 +27,8 @@
 libfacedetection v1（caffe）|0.65 |0.5       |0.233
 libfacedetection v2（caffe）|0.714 |0.585       |0.306
 Retinaface-Mobilenet-0.25 (Mxnet)   |0.745|0.553|0.232
-version-slim|0.765     |0.662       |0.385
-version-RFB|**0.784**     |**0.688**       |**0.418**
+version-slim|0.77     |0.671       |0.395
+version-RFB|**0.787**     |**0.698**       |**0.438**
 
 
 - 在WIDER FACE val集测试精度（单尺度输入分辨率：**VGA 640*480 或按最大边长640等比缩放** ） 
@@ -38,8 +38,8 @@ version-RFB|**0.784**     |**0.688**       |**0.418**
 libfacedetection v1（caffe）|0.741 |0.683       |0.421
 libfacedetection v2（caffe）|0.773 |0.718       |0.485
 Retinaface-Mobilenet-0.25 (Mxnet)   |**0.879**|0.807|0.481
-version-slim|0.757     |0.721       |0.511
-version-RFB|0.851     |**0.81**       |**0.541**
+version-slim|0.853     |0.819       |0.539
+version-RFB|0.855     |**0.822**       |**0.579**
 
 > - 该部分主要是测试模型在中小分辨率下的测试集效果。
 > - RetinaFace-mnet（Retinaface-Mobilenet-0.25），来自于很棒的工作[insightface](https://github.com/deepinsight/insightface)，测试该网络时是将原图按最大边长320或者640等比缩放，所以人脸不会形变,其余网络采用固定尺寸resize。同时RetinaFace-mnet最优1600单尺度val测试集结果为0.887(Easy)/0.87(Medium)/0.791(Hard)。
@@ -98,11 +98,11 @@ version-RFB| **1.11**
     wider_face_2_voc_add_landmark.py
 ```
 
-3. 至此VOC训练集准备完毕，项目根目录下分别有 **train_mb_tiny_fd.sh** 和 **train_mb_tiny_RFB_fd.sh** 两个脚本，前者用于训练**slim版本**模型，后者用于训练**RFB版本**模型，默认参数已设置好，参数如需微调请参考 **./train.py** 中关于各训练超参数的说明。
+3. 至此VOC训练集准备完毕，项目根目录下分别有 **train-version-slim.sh** 和 **train-version-RFB.sh** 两个脚本，前者用于训练**slim版本**模型，后者用于训练**RFB版本**模型，默认参数已设置好，参数如需微调请参考 **./train.py** 中关于各训练超参数的说明。
 
-4. 运行**train_mb_tiny_fd.sh**和**train_mb_tiny_RFB_fd.sh**即可
+4. 运行**train-version-slim.sh** 或 **train-version-RFB.sh**即可
 ```Shell
-sh train_mb_tiny_fd.sh 或者 sh train_mb_tiny_RFB_fd.sh
+sh train-version-slim.sh 或者 sh train-version-RFB.sh
 ```
 
 ## 检测图片效果（输入分辨率：640x480）
@@ -111,10 +111,10 @@ sh train_mb_tiny_fd.sh 或者 sh train_mb_tiny_RFB_fd.sh
 ![img1](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/blob/master/readme_imgs/4.jpg)
 ## PS
 
- - 若生产实际场景为中近距离、人脸大、人脸数少，则建议采用输入尺寸input_size：320（320x240）分辨率训练，并采用320x240/160x120/128x96图片大小输入进行预测推理，如使用提供的预训练模型**Mb_Tiny_RFB_FD_train_input_320.pth**进行推理。
+ - 若生产实际场景为中近距离、人脸大、人脸数少，则建议采用输入尺寸input_size：320（320x240）分辨率训练，并采用 320x240/160x120/128x96 图片大小输入进行预测推理，如使用提供的预训练模型 **version-slim-320.pth** 或者 **version-RFB-320.pth** 进行推理。
  - 若生产实际场景为中远距离、人脸中小、人脸数多，则建议采用：
  
- （1）最优：输入尺寸input_size：640（640x480）分辨率训练，并采用同等或更大输入尺寸进行预测推理,如使用提供的预训练模型**Mb_Tiny_RFB_FD_train_input_640.pth**进行推理，更低的误报。
+ （1）最优：输入尺寸input_size：640（640x480）分辨率训练，并采用同等或更大输入尺寸进行预测推理,如使用提供的预训练模型 **version-slim-640.pth** 或者 **version-RFB-640.pth** 进行推理，更低的误报。
  
  （2）次优：输入尺寸input_size：320（320x240）分辨率训练，并采用480x360或640x480大小输入进行预测推理，对于小人脸更敏感，误报会增加。
  
@@ -122,6 +122,7 @@ sh train_mb_tiny_fd.sh 或者 sh train_mb_tiny_RFB_fd.sh
  - 过大的输入分辨率虽然会增强小人脸的召回率，但是也会提高大、近距离人脸的误报率，而且推理速度延迟成倍增加。
  - 过小的输入分辨率虽然会明显加快推理速度，但是会大幅降低小人脸的召回率。
  - 生产场景的输入分辨率尽量与模型训练时的输入分辨率保持一致，上下浮动不宜过大。
+ 
 
 ## TODO LIST
 
@@ -129,8 +130,8 @@ sh train_mb_tiny_fd.sh 或者 sh train_mb_tiny_RFB_fd.sh
 
  
 ## Completed list
- - Widerface测试代码 ([vealocia](https://github.com/vealocia))
- - NCNN C++推理代码 ([vealocia](https://github.com/vealocia))
+ - [Widerface测试代码](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/tree/master/widerface_evaluate)
+ - [NCNN C++推理代码](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/tree/master/ncnn) ([vealocia](https://github.com/vealocia))
  
 ##  Reference
  - [pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)

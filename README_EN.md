@@ -25,8 +25,8 @@ Model|Easy Set|Medium Set|Hard Set
 libfacedetection v1（caffe）|0.65 |0.5       |0.233
 libfacedetection v2（caffe）|0.714 |0.585       |0.306
 Retinaface-Mobilenet-0.25 (Mxnet)   |0.745|0.553|0.232
-version-slim|0.765     |0.662       |0.385
-version-RFB|**0.784**     |**0.688**       |**0.418**
+version-slim|0.77     |0.671       |0.395
+version-RFB|**0.787**     |**0.698**       |**0.438**
 
 
 - Test accuracy in the WIDER FACE val set (single-scale input resolution: **VGA 640*480 or scaling by the maximum side length of 640** )
@@ -36,8 +36,8 @@ Model|Easy Set|Medium Set|Hard Set
 libfacedetection v1（caffe）|0.741 |0.683       |0.421
 libfacedetection v2（caffe）|0.773 |0.718       |0.485
 Retinaface-Mobilenet-0.25 (Mxnet)   |**0.879**|0.807|0.481
-version-slim|0.757     |0.721       |0.511
-version-RFB|0.851     |**0.81**       |**0.541**
+version-slim|0.853     |0.819       |0.539
+version-RFB|0.855     |**0.822**       |**0.579**
 
 > - This part mainly tests the effect of the test set under the medium and small resolutions.
 > - RetinaFace-mnet (Retinaface-Mobilenet-0.25), from a great job [insightface](https://github.com/deepinsight/insightface), when testing this network, the original image is scaled by 320 or 640 as the maximum side length, so the face will not be deformed, and the rest of the network will have a fixed size resize. At the same time, the result of the RetinaFace-mnet optimal 1600 single-scale val set was 0.887 (Easy) / 0.87 (Medium) / 0.791 (Hard).
@@ -96,11 +96,11 @@ After the program is run and finished, the **wider_face_add_lm_10_10** folder wi
     wider_face_2_voc_add_landmark.py
 ```
 
-3. At this point, the VOC training set is ready. There are two scripts: **train_mb_tiny_fd.sh** and **train_mb_tiny_RFB_fd.sh** in the root directory of the project. The former is used to train the **slim version** model, and the latter is used. Training **RFB version** model, the default parameters have been set, if the parameters need to be changed, please refer to the description of each training parameter in **./train.py**.
+3. At this point, the VOC training set is ready. There are two scripts: **train-version-slim.sh** and **train-version-RFB.sh** in the root directory of the project. The former is used to train the **slim version** model, and the latter is used. Training **RFB version** model, the default parameters have been set, if the parameters need to be changed, please refer to the description of each training parameter in **./train.py**.
 
-4. Run **train_mb_tiny_fd.sh** and **train_mb_tiny_RFB_fd.sh**
+4. Run **train-version-slim.sh**  **train-version-RFB.sh**
 ```Shell
-sh train_mb_tiny_fd.sh or sh train_mb_tiny_RFB_fd.sh
+sh train-version-slim.sh or sh train-version-RFB.sh
 ```
 
 ## Detecting image effects (input resolution: 640x480)
@@ -109,10 +109,10 @@ sh train_mb_tiny_fd.sh or sh train_mb_tiny_RFB_fd.sh
 ![img1](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/blob/master/readme_imgs/4.jpg)
 ## PS
 
-- If the actual production scene is medium-distance, large face, and small number of faces, it is recommended to use input size input_size: 320 (320x240) resolution for training, and use 320x240 ,160x120 or 128x96 image size input for inference, such as using the provided pre-training The model **Mb_Tiny_RFB_FD_train_input_320.pth** .
+- If the actual production scene is medium-distance, large face, and small number of faces, it is recommended to use input size input_size: 320 (320x240) resolution for training, and use 320x240 ,160x120 or 128x96 image size input for inference, such as using the provided pre-training  model **version-slim-320.pth** or **version-RFB-320.pth** .
 - If the actual production scene is medium or long distance,  medium or small face and large face number, it is recommended to adopt:
 
- (1) Optimal: input size input_size: 640 (640x480) resolution training, and use the same or larger input size for inference, such as using the provided pre-training model **Mb_Tiny_RFB_FD_train_input_640.pth** for inference, lower False positives.
+ (1) Optimal: input size input_size: 640 (640x480) resolution training, and use the same or larger input size for inference, such as using the provided pre-training model **version-slim-640.pth** or **version-RFB-640.pth** for inference, lower False positives.
  
  (2) Sub-optimal: input size input_size: 320 (320x240) resolution training, and use 480x360 or 640x480 size input for predictive reasoning, more sensitive to small faces, false positives will increase.
  
@@ -126,8 +126,8 @@ sh train_mb_tiny_fd.sh or sh train_mb_tiny_RFB_fd.sh
 - Add some test data
 
 ## Completed list
- - Widerface test code ([vealocia](https://github.com/vealocia))
- - NCNN C++ inference code ([vealocia](https://github.com/vealocia))
+ - [Widerface test code](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/tree/master/widerface_evaluate)
+ - [NCNN C++ inference code](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB/tree/master/ncnn) ([vealocia](https://github.com/vealocia))
  
 ##  Reference
 - [pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
