@@ -56,17 +56,18 @@ class BasicRFB(nn.Module):
         self.relu = nn.ReLU(inplace=False)
 
     def forward(self, x):
-        x0 = self.branch0(x)
-        x1 = self.branch1(x)
-        x2 = self.branch2(x)
+        # x: [24, 64, 30 ,40]
+        x0 = self.branch0(x)        # [24, 16, 30, 40]
+        x1 = self.branch1(x)        # [24, 16, 30, 40]
+        x2 = self.branch2(x)        # [24, 16, 30, 40]
 
-        out = torch.cat((x0, x1, x2), 1)
-        out = self.ConvLinear(out)
+        out = torch.cat((x0, x1, x2), 1)       # [24, 48, 30, 40]
+        out = self.ConvLinear(out)             # [24, 64, 30, 40]
         short = self.shortcut(x)
         out = out * self.scale + short
         out = self.relu(out)
 
-        return out
+        return out                             # [24, 64, 30, 40]
 
 
 class Mb_Tiny_RFB(nn.Module):

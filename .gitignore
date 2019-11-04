@@ -1,5 +1,6 @@
 .idea
 data/wider_face_add_lm_10_10
+caltech_data
 
 __pycache__/
 *.py[cod]

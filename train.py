@@ -13,8 +13,9 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 from torch.utils.data import DataLoader, ConcatDataset
 
 from vision.datasets.voc_dataset import VOCDataset
+from vision.datasets.caltech_dataset import CaltechDataset
 from vision.nn.multibox_loss import MultiboxLoss
-from vision.ssd.config.fd_config import define_img_size
+
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
 
 parser = argparse.ArgumentParser(
@@ -105,9 +106,18 @@ args = parser.parse_args()
 
 input_img_size = args.input_size  # define input size ,default optional(128/160/320/480/640/1280)
 logging.info("inpu size :{}".format(input_img_size))
+
+if args.dataset_type == 'caltech':
+    from vision.ssd.config.person_config import define_img_size
+else:
+    from vision.ssd.config.fd_config import define_img_size
+
 define_img_size(input_img_size)  # must put define_img_size() before 'import fd_config'
 
-from vision.ssd.config import fd_config
+if args.dataset_type == 'caltech':
+    from vision.ssd.config import person_config
+else:
+    from vision.ssd.config import fd_config
 from vision.ssd.data_preprocessing import TrainAugmentation, TestTransform
 from vision.ssd.mb_tiny_RFB_fd import create_Mb_Tiny_RFB_fd
 from vision.ssd.mb_tiny_fd import create_mb_tiny_fd
@@ -202,7 +212,10 @@ if __name__ == '__main__':
         config = fd_config
     elif args.net == 'RFB':
         create_net = create_Mb_Tiny_RFB_fd
-        config = fd_config
+        if args.dataset_type == 'caltech':
+            config = person_config
+        else:
+            config = fd_config
     else:
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)
@@ -226,6 +239,11 @@ if __name__ == '__main__':
             store_labels(label_file, dataset.class_names)
             num_classes = len(dataset.class_names)
 
+        elif args.dataset_type == 'caltech':
+            dataset = CaltechDataset(dataset_path, transform=train_transform, target_transform=target_transform)
+            label_file = os.path.join(args.checkpoint_folder, "caltech-model-labels.txt")
+            store_labels(label_file, dataset.class_names)
+            num_classes = len(dataset.class_names)
         else:
             raise ValueError(f"Dataset tpye {args.dataset_type} is not supported.")
         datasets.append(dataset)
@@ -239,6 +257,9 @@ if __name__ == '__main__':
     if args.dataset_type == "voc":
         val_dataset = VOCDataset(args.validation_dataset, transform=test_transform,
                                  target_transform=target_transform, is_test=True)
+    elif args.dataset_type == "caltech":
+        val_dataset = CaltechDataset(args.validation_dataset, transform=test_transform,
+                                     target_transform=target_transform, is_test=True)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
     val_loader = DataLoader(val_dataset, args.batch_size,
