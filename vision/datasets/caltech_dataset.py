@@ -5,10 +5,6 @@ import json
 import random
 import cv2
 import numpy as np
-from vision.ssd.config import fd_config
-from vision.ssd.config.fd_config import define_img_size
-
-define_img_size(320)
 
 
 class CaltechDataset:
@@ -47,12 +43,14 @@ class CaltechDataset:
                             x, y, w, h = datum['pos']
                             boxes.append([x, y, x+w, y+h])
                             labels.append(1)
+                        if not boxes:
+                            continue
                         self.datalist.append({"image_path": image_path, "boxes": boxes, "labels": labels})
-
             random.shuffle(self.datalist)
             part = int(len(self.datalist) * 0.75)
             self.train_datalist = self.datalist[0:part]
             self.test_datalist = self.datalist[part:]
+            print("train_datalist length: {0}, test_datalist length: {1}".format(len(self.train_datalist), len(self.test_datalist)))
             json.dump(self.train_datalist, open(os.path.join(root, self.train_list_name), 'w'))
             json.dump(self.test_datalist, open(os.path.join(root, self.test_list_name), 'w'))
 
@@ -100,8 +98,8 @@ class CaltechDataset:
             index = index % len(self.train_datalist)
             data = self.train_datalist[index]
         image_path = data["image_path"]
-        boxes = np.array(data["boxes"])
-        labels = np.array(data["labels"])
+        boxes = np.array(data["boxes"], dtype=np.float32)
+        labels = np.array(data["labels"], dtype=np.int64)
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if self.transform:
@@ -113,7 +111,9 @@ class CaltechDataset:
 
 
 if __name__ == '__main__':
-    print(fd_config.priors)
+    a = []
+    if not a:
+        print("none")
     dataset = CaltechDataset("caltech_data")
     dataset.__getitem__(334)
     dataset.show_image_and_label(334)
