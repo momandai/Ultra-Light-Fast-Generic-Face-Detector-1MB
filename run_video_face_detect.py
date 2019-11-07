@@ -10,6 +10,8 @@ from vision.ssd.config.fd_config import define_img_size
 parser = argparse.ArgumentParser(
     description='detect_video')
 
+parser.add_argument("--dataset_type", default="voc", type=str,
+                    help='Specify dataset type. Currently support voc.')
 parser.add_argument('--net_type', default="RFB", type=str,
                     help='The network architecture ,optional: RFB (higher precision) or slim (faster)')
 parser.add_argument('--input_size', default=480, type=int,
@@ -27,18 +29,19 @@ parser.add_argument('--video_path', default="/home/linzai/Videos/video/16_1.MP4"
 args = parser.parse_args()
 
 input_img_size = args.input_size
-define_img_size(input_img_size)  # must put define_img_size() before 'import create_mb_tiny_fd, create_mb_tiny_fd_predictor'
+define_img_size(input_img_size, args.dataset_type)  # must put define_img_size() before 'import create_mb_tiny_fd, create_mb_tiny_fd_predictor'
 
 from vision.ssd.mb_tiny_fd import create_mb_tiny_fd, create_mb_tiny_fd_predictor
 from vision.ssd.mb_tiny_RFB_fd import create_Mb_Tiny_RFB_fd, create_Mb_Tiny_RFB_fd_predictor
 from vision.utils.misc import Timer
 
-label_path = "./models/voc-model-labels.txt"
+# label_path = "./models/voc-model-labels.txt"
+label_path = 'models/train-voc_person-0.0.1-RFB/voc_person-model-labels.txt'
 
 net_type = args.net_type
 
-cap = cv2.VideoCapture(args.video_path)  # capture from video
-# cap = cv2.VideoCapture(0)  # capture from camera
+# cap = cv2.VideoCapture(args.video_path)  # capture from video
+cap = cv2.VideoCapture(0)  # capture from camera
 
 class_names = [name.strip() for name in open(label_path).readlines()]
 num_classes = len(class_names)
@@ -53,7 +56,8 @@ if net_type == 'slim':
     net = create_mb_tiny_fd(len(class_names), is_test=True, device=test_device)
     predictor = create_mb_tiny_fd_predictor(net, candidate_size=candidate_size, device=test_device)
 elif net_type == 'RFB':
-    model_path = "models/pretrained/version-RFB-320.pth"
+    # model_path = "models/pretrained/version-RFB-320.pth"
+    model_path = "models/train-voc_person-0.0.1-RFB/RFB-Epoch-95-Loss-3.498071009204501.pth"
     # model_path = "models/pretrained/version-RFB-640.pth"
     net = create_Mb_Tiny_RFB_fd(len(class_names), is_test=True, device=test_device)
     predictor = create_Mb_Tiny_RFB_fd_predictor(net, candidate_size=candidate_size, device=test_device)

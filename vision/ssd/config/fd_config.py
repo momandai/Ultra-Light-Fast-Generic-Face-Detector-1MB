@@ -1,6 +1,6 @@
 import numpy as np
 
-from vision.utils.box_utils import generate_priors
+from vision.utils.box_utils import generate_priors, generate_person_priors
 
 image_mean_test = image_mean = np.array([127, 127, 127])
 image_std = 128.0
@@ -15,7 +15,7 @@ feature_map_w_h_list = [[40, 20, 10, 5], [30, 15, 8, 4]]  # default feature map 
 priors = []
 
 
-def define_img_size(size):
+def define_img_size(size, dataset_type='voc'):
     global image_size, feature_map_w_h_list, priors
     img_size_dict = {128: [128, 96],
                      160: [160, 120],
@@ -38,4 +38,7 @@ def define_img_size(size):
         for k in range(0, len(feature_map_w_h_list[i])):
             item_list.append(image_size[i] / feature_map_w_h_list[i][k])
         shrinkage_list.append(item_list)
-    priors = generate_priors(feature_map_w_h_list, shrinkage_list, image_size, min_boxes)
+    if dataset_type == "caltech" or dataset_type == "voc_person":
+        priors = generate_person_priors(feature_map_w_h_list, shrinkage_list, image_size, min_boxes)
+    else:
+        priors = generate_priors(feature_map_w_h_list, shrinkage_list, image_size, min_boxes)

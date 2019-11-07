@@ -15,7 +15,7 @@ def generate_priors(feature_map_list, shrinkage_list, image_size, min_boxes, cla
 
                 for min_box in min_boxes[index]:
                     w = min_box / image_size[0]
-                    h = min_box / image_size[1] * 2.5
+                    h = min_box / image_size[1]
                     priors.append([
                         x_center,
                         y_center,
