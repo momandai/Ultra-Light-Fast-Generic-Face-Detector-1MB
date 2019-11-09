@@ -136,10 +136,11 @@ class VOCPersonDataset:
             x0, y0, x1, y1 = [int(v) for v in box]
             cv2.rectangle(image, (x0, y0), (x1, y1), (0, 0, 255), 1)
         cv2.imshow("image", image)
+        cv2.imwrite("test.jpg", image)
         cv2.waitKey(-1)
+
 
 if __name__ == '__main__':
     a = np.array([[1,2,3,4]])
-
     dataset = VOCPersonDataset("/media/test/data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012")
     dataset.show_image_and_label(238)

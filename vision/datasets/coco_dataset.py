@@ -31,46 +31,36 @@ class COCODataset:
         self.class_dict = {class_name: i for i, class_name in enumerate(self.class_names)}
 
     def __getitem__(self, index):
-        data = self.data_list[idnex]
-        boxes, labels, is_difficult = self._get_annotation(image_id)
-        if not self.keep_difficult:
-            boxes = boxes[is_difficult == 0]
-            labels = labels[is_difficult == 0]
-        image = self._read_image(image_id)
+        data = self.data_list[index]
+        image_id = data['image_file']
+        boxes = np.array(data['boxes'], dtype=np.float32)
+        labels = np.array(data['labels'], dtype=np.int64)
+        image = cv2.imread(image_id)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if self.transform:
             image, boxes, labels = self.transform(image, boxes, labels)
         if self.target_transform:
             boxes, labels = self.target_transform(boxes, labels)
         return image, boxes, labels
 
-    def get_image(self, index):
-        image_id = self.ids[index]
-        image = self._read_image(image_id)
-        if self.transform:
-            image, _ = self.transform(image)
-        return image
-
-    def get_annotation(self, index):
-        image_id = self.ids[index]
-        return image_id, self._get_annotation(image_id)
-
     def __len__(self):
-        return len(self.ids)
+        return len(self.data_list)
 
-    @staticmethod
-    def _read_image_ids(image_sets_file):
-        ids = []
-        with open(image_sets_file) as f:
-            for line in f:
-                ids.append(line.rstrip())
-        return ids
+    def show_image_and_labels(self, index):
+        data = self.data_list[index]
+        image_id = data['image_file']
+        boxes = data['boxes']
+        labels = data['labels']
+        image = cv2.imread(image_id)
+        for box, label in zip(boxes, labels):
+            x0, y0, x1, y1 = [int(v) for v in box]
+            color = (0, 0, 255) if label == 1 else (0, 255, 255)
+            cv2.rectangle(image, (x0, y0), (x1, y1), color, 1)
+        cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+        cv2.imshow("image", image)
+        cv2.waitKey(-1)
 
-    def _read_image(self, image_id):
-        image_file = self.root / f"JPEGImages/{image_id}.jpg"
-        image = cv2.imread(str(image_file))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return image
 
 if __name__ == '__main__':
     dataset = COCODataset("/media/test/data/coco")
-
+    dataset.show_image_and_labels(7)
