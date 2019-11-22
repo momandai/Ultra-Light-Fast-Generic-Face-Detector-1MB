@@ -39,12 +39,12 @@ public:
 
     ~UltraFace();
 
-    int detect(ncnn::Mat &img, std::vector<FaceInfo> &face_list);
+    int detect(ncnn::Mat &img, std::vector<FaceInfo> &person_list, std::vector<FaceInfo> &face_list);
 
 private:
-    void generateBBox(std::vector<FaceInfo> &bbox_collection, ncnn::Mat scores, ncnn::Mat boxes, float score_threshold, int num_anchors);
+    void generateBBox(std::vector<FaceInfo> &person_bbox_collection, std::vector<FaceInfo> &face_bbox_collection, ncnn::Mat scores, ncnn::Mat boxes, float score_threshold, int num_anchors);
 
-    void nms(std::vector<FaceInfo> &input, std::vector<FaceInfo> &output, int type = blending_nms);
+        void nms(std::vector<FaceInfo> &input, std::vector<FaceInfo> &output, int type = blending_nms);
 
 private:
     ncnn::Net ultraface;

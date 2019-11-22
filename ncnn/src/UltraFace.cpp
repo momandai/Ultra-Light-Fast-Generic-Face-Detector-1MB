@@ -107,7 +107,7 @@ UltraFace::UltraFace(const std::string &bin_path, const std::string &param_path,
 
 UltraFace::~UltraFace() { ultraface.clear(); }
 
-int UltraFace::detect(ncnn::Mat &img, std::vector<FaceInfo> &face_list) {
+int UltraFace::detect(ncnn::Mat &img, std::vector<FaceInfo> &person_list, std::vector<FaceInfo> &face_list) {
     if (img.empty()) {
         std::cout << "image is empty ,please check!" << std::endl;
         return -1;
@@ -121,7 +121,8 @@ int UltraFace::detect(ncnn::Mat &img, std::vector<FaceInfo> &face_list) {
     ncnn::Mat ncnn_img = in;
     ncnn_img.substract_mean_normalize(mean_vals, norm_vals);
 
-    std::vector<FaceInfo> bbox_collection;
+    std::vector<FaceInfo> person_bbox_collection;
+    std::vector<FaceInfo> face_bbox_collection;
     std::vector<FaceInfo> valid_input;
 
     ncnn::Extractor ex = ultraface.create_extractor();
@@ -132,14 +133,15 @@ int UltraFace::detect(ncnn::Mat &img, std::vector<FaceInfo> &face_list) {
     ncnn::Mat boxes;
     ex.extract("scores", scores);
     ex.extract("boxes", boxes);
-    generateBBox(bbox_collection, scores, boxes, score_threshold, num_anchors);
-    nms(bbox_collection, face_list);
+    generateBBox(person_bbox_collection, face_bbox_collection, scores, boxes, score_threshold, num_anchors);
+    nms(person_bbox_collection, person_list);
+    nms(face_bbox_collection, face_list);
     return 0;
 }
 
-void UltraFace::generateBBox(std::vector<FaceInfo> &bbox_collection, ncnn::Mat scores, ncnn::Mat boxes, float score_threshold, int num_anchors) {
+void UltraFace::generateBBox(std::vector<FaceInfo> &person_bbox_collection, std::vector<FaceInfo> &face_bbox_collection, ncnn::Mat scores, ncnn::Mat boxes, float score_threshold, int num_anchors) {
     for (int i = 0; i < num_anchors; i++) {
-        if (scores.channel(0)[i * 2 + 1] > score_threshold) {
+        if (scores.channel(0)[i * 3 + 1] > score_threshold) {
             FaceInfo rects;
             float x_center = boxes.channel(0)[i * 4] * center_variance * priors[i][2] + priors[i][0];
             float y_center = boxes.channel(0)[i * 4 + 1] * center_variance * priors[i][3] + priors[i][1];
@@ -150,8 +152,21 @@ void UltraFace::generateBBox(std::vector<FaceInfo> &bbox_collection, ncnn::Mat s
             rects.y1 = clip(y_center - h / 2.0, 1) * image_h;
             rects.x2 = clip(x_center + w / 2.0, 1) * image_w;
             rects.y2 = clip(y_center + h / 2.0, 1) * image_h;
-            rects.score = clip(scores.channel(0)[i * 2 + 1], 1);
-            bbox_collection.push_back(rects);
+            rects.score = clip(scores.channel(0)[i * 3 + 1], 1);
+            person_bbox_collection.push_back(rects);
+        } else if (scores.channel(0)[i * 3 + 2] > score_threshold) {
+            FaceInfo rects;
+            float x_center = boxes.channel(0)[i * 4] * center_variance * priors[i][2] + priors[i][0];
+            float y_center = boxes.channel(0)[i * 4 + 1] * center_variance * priors[i][3] + priors[i][1];
+            float w = exp(boxes.channel(0)[i * 4 + 2] * size_variance) * priors[i][2];
+            float h = exp(boxes.channel(0)[i * 4 + 3] * size_variance) * priors[i][3];
+
+            rects.x1 = clip(x_center - w / 2.0, 1) * image_w;
+            rects.y1 = clip(y_center - h / 2.0, 1) * image_h;
+            rects.x2 = clip(x_center + w / 2.0, 1) * image_w;
+            rects.y2 = clip(y_center + h / 2.0, 1) * image_h;
+            rects.score = clip(scores.channel(0)[i * 3+ 2], 1);
+            face_bbox_collection.push_back(rects);
         }
     }
 }
