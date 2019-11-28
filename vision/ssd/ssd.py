@@ -14,7 +14,7 @@ GraphPath = namedtuple("GraphPath", ['s0', 'name', 's1'])
 class SSD(nn.Module):
     def __init__(self, num_classes: int, base_net: nn.ModuleList, source_layer_indexes: List[int],
                  extras: nn.ModuleList, classification_headers: nn.ModuleList,
-                 regression_headers: nn.ModuleList, is_test=False, config=None, device=None):
+                 regression_headers: nn.ModuleList, is_test=False, config=None, device=None, onnx_export=False):
         """Compose a SSD model using the given components.
         """
         super(SSD, self).__init__()
@@ -25,7 +25,9 @@ class SSD(nn.Module):
         self.extras = extras
         self.classification_headers = classification_headers
         self.regression_headers = regression_headers
+        self.onnx_export = onnx_export
         self.is_test = is_test
+
         self.config = config
 
         # register layers in source_layer_indexes by adding them to a module list
@@ -90,15 +92,19 @@ class SSD(nn.Module):
         confidences = torch.cat(confidences, 1)
         locations = torch.cat(locations, 1)
 
-        if self.is_test:
+        if self.onnx_export:
             confidences = F.softmax(confidences, dim=2)
-            # boxes = box_utils.convert_locations_to_boxes(
-            #     locations, self.priors, self.config.center_variance, self.config.size_variance
-            # )
-            # boxes = box_utils.center_form_to_corner_form(boxes)
             return confidences, locations
         else:
-            return confidences, locations
+            if self.is_test:
+                confidences = F.softmax(confidences, dim=2)
+                boxes = box_utils.convert_locations_to_boxes(
+                    locations, self.priors, self.config.center_variance, self.config.size_variance
+                )
+                boxes = box_utils.center_form_to_corner_form(boxes)
+                return confidences, boxes
+            else:
+                return confidences, locations
 
     def compute_header(self, i, x):
         confidence = self.classification_headers[i](x)
