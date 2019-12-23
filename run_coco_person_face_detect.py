@@ -14,7 +14,7 @@ parser.add_argument("--dataset_type", default="coco_person_face", type=str,
                     help='Specify dataset type. Currently support voc.')
 parser.add_argument('--net_type', default="RFB", type=str,
                     help='The network architecture ,optional: RFB (higher precision) or slim (faster)')
-parser.add_argument('--input_size', default=480, type=int,
+parser.add_argument('--input_size', default=320, type=int,
                     help='define network input size,default optional value 128/160/320/480/640/1280')
 parser.add_argument('--threshold', default=0.7, type=float,
                     help='score threshold')
@@ -36,7 +36,7 @@ from vision.ssd.mb_tiny_RFB_fd import create_Mb_Tiny_RFB_fd, create_Mb_Tiny_RFB_
 from vision.utils.misc import Timer
 
 # label_path = "./models/voc-model-labels.txt"
-label_path = 'models/train-coco_person_face-0.0.1-RFB/coco-person-face-labels.txt'
+label_path = 'models/train-coco_person_face-0.0.2-RFB-320/coco-person-face-labels.txt'
 
 net_type = args.net_type
 
@@ -57,7 +57,8 @@ if net_type == 'slim':
     predictor = create_mb_tiny_fd_predictor(net, candidate_size=candidate_size, device=test_device)
 elif net_type == 'RFB':
     # model_path = "models/pretrained/version-RFB-320.pth"
-    model_path = "models/train-coco_person_face-0.0.1-RFB/RFB-Epoch-199-Loss-3.3373507743790034.pth"
+    # model_path = "models/train-coco_person_face-0.0.1-RFB/RFB-Epoch-199-Loss-3.3373507743790034.pth"
+    model_path = "models/train-coco_person_face-0.0.2-RFB-320/RFB-Epoch-199-Loss-3.570982652051108.pth"
     # model_path = "models/pretrained/version-RFB-640.pth"
     net = create_Mb_Tiny_RFB_fd(len(class_names), is_test=True, device=test_device)
     predictor = create_Mb_Tiny_RFB_fd_predictor(net, candidate_size=candidate_size, device=test_device)

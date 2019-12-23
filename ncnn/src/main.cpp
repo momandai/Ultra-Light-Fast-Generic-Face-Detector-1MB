@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
 
     std::string bin_path = argv[1];
     std::string param_path = argv[2];
-    cv::namedWindow("UltraFace");
-    UltraFace ultraface(bin_path, param_path, 640, 4, 0.7); // config model input
+//    cv::namedWindow("UltraFace");
+    UltraFace ultraface(bin_path, param_path, 320, 1, 0.6); // config model input
 
     cv::VideoCapture cap(0);
     cv::Mat frame;
@@ -50,11 +50,13 @@ int main(int argc, char **argv) {
         middle_num = 0;
         right_num = 0;
         cap.read(frame);
-        ncnn::Mat inmat = ncnn::Mat::from_pixels(frame.data, ncnn::Mat::PIXEL_BGR2RGB, frame.cols, frame.rows);
-
         std::vector<FaceInfo> face_info;
         std::vector<FaceInfo> person_info;
+        unsigned long long start = get_timestamp();
+        ncnn::Mat inmat = ncnn::Mat::from_pixels(frame.data, ncnn::Mat::PIXEL_BGR2RGB, frame.cols, frame.rows);
         ultraface.detect(inmat, person_info, face_info);
+        unsigned long long stop = get_timestamp();
+        std::cout << "detect time: " << stop-start << " ms" << std::endl;
 
         for (unsigned int i = 0; i < face_info.size(); i++) {
             auto face = face_info[i];
@@ -92,8 +94,8 @@ int main(int argc, char **argv) {
 //            mqtt_local_pub->pub_message(pub_message);
 //        }
 
-        cv::imshow("UltraFace", frame);
-        cv::waitKey(33);
+//        cv::imshow("UltraFace", frame);
+//        cv::waitKey(33);
     }
 
 

@@ -17,7 +17,7 @@ def SeperableConv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=
     )
 
 
-def create_mb_tiny_fd(num_classes, is_test=False, device="cuda"):
+def create_mb_tiny_fd(num_classes, is_test=False, device="cuda", onnx_export=False):
     base_net = Mb_Tiny(2)
     base_net_model = base_net.model  # disable dropout layer
 
@@ -50,7 +50,7 @@ def create_mb_tiny_fd(num_classes, is_test=False, device="cuda"):
     ])
 
     return SSD(num_classes, base_net_model, source_layer_indexes,
-               extras, classification_headers, regression_headers, is_test=is_test, config=config, device=device)
+               extras, classification_headers, regression_headers, is_test=is_test, config=config, device=device, onnx_export=onnx_export)
 
 
 def create_mb_tiny_fd_predictor(net, candidate_size=200, nms_method=None, sigma=0.5, device=None):

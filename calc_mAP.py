@@ -6,15 +6,32 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+sns.set(style="darkgrid")
+
+parser = argparse.ArgumentParser(prog='calc_mAP.py')
+parser.add_argument('--net-type', default="RFB", type=str,
+                    help='The network architecture ,optional: RFB (higher precision) or slim (faster)')
+parser.add_argument('--batch-size', type=int, default=16, help='size of each image batch')
+parser.add_argument('--iou-thres', type=float, default=0.5, help='iou threshold required to qualify as detected')
+parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
+parser.add_argument('--nms-thres', type=float, default=0.5, help='iou threshold for non-maximum suppression')
+parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
+parser.add_argument('--img-size', type=int, default=160, help='inference size (pixels)')
+parser.add_argument('--weights', type=str, default='models/train-coco_person_face-0.0.3-RFB-160/RFB-Epoch-199-Loss-4.073122353780837.pth', help='weight path')
+opt = parser.parse_args()
+print(opt)
 
 from vision.ssd.config.fd_config import define_img_size
 from vision.datasets.coco_dataset import COCODataset
 from torch.utils.data import DataLoader
-define_img_size(640, "coco_person_face")
+define_img_size(opt.img_size, "coco_person_face")
 
 from vision.ssd.config import fd_config
 from vision.ssd.data_preprocessing import TestTransform
 from vision.ssd.mb_tiny_RFB_fd import create_Mb_Tiny_RFB_fd, create_Mb_Tiny_RFB_fd_predictor
+from vision.ssd.mb_tiny_fd import create_mb_tiny_fd, create_mb_tiny_fd_predictor
 from vision.ssd.ssd import MatchPrior
 from vision.utils.box_utils import iou_of
 config = fd_config
@@ -27,11 +44,15 @@ def calc_mAP(weights,
             nms_thres=0.5,
             save_json=False,
             model=None):
-    label_path = "models/train-coco_person_face-0.0.1-RFB/coco-person-face-labels.txt"
+    label_path = "models/train-coco_person_face-0.0.3-RFB-160/coco-person-face-labels.txt"
     class_names = [name.strip() for name in open(label_path).readlines()]
     num_classes = len(class_names)
-    net = create_Mb_Tiny_RFB_fd(len(class_names), is_test=True, device="cuda:0")
-    predictor = create_Mb_Tiny_RFB_fd_predictor(net, candidate_size=100, device="cuda:0")
+    if opt.net_type == 'RFB':
+        net = create_Mb_Tiny_RFB_fd(len(class_names), is_test=True, device="cuda:0")
+        predictor = create_Mb_Tiny_RFB_fd_predictor(net, candidate_size=100, device="cuda:0")
+    elif opt.net_type == 'slim':
+        net = create_mb_tiny_fd(len(class_names), is_test=True, device="cuda:0")
+        predictor = create_mb_tiny_fd_predictor(net, candidate_size=100, device="cuda:0")
 
     net.load(weights)
     net.eval()
@@ -152,11 +173,15 @@ def ap_per_class(tp, conf, pred_cls, target_cls):
 
             # AP from recall-precision curve
             ap.append(compute_ap(recall_curve, precision_curve))
-
+            df = pd.DataFrame()
+            df["recall"] = recall_curve
+            df["precision"] = precision_curve
+            df.to_pickle("{0}-{1}-{2}.pkl".format(opt.net_type, opt.img_size, labels[c]))
             # Plot
-            plt.plot(recall_curve, precision_curve, label=labels[c])
+            print("recall_curve_length: {0}".format(len(recall_curve)))
+            sns.lineplot(recall_curve[::10], precision_curve[::10], label=labels[c])
 
-    plt.legend()
+    # plt.legend()
     plt.show()
     plt.savefig("Ultra-fast-face-detect.png")
     # Compute F1 score (harmonic mean of precision and recall)
@@ -194,16 +219,7 @@ def compute_ap(recall, precision):
     return ap
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='calc_mAP.py')
-    parser.add_argument('--batch-size', type=int, default=16, help='size of each image batch')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='iou threshold required to qualify as detected')
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
-    parser.add_argument('--nms-thres', type=float, default=0.5, help='iou threshold for non-maximum suppression')
-    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--weights', type=str, default='models/train-coco_person_face-0.0.1-RFB/RFB-Epoch-199-Loss-3.3373507743790034.pth', help='weight path')
-    opt = parser.parse_args()
-    print(opt)
+
 
     with torch.no_grad():
         mAP = calc_mAP(opt.weights,
